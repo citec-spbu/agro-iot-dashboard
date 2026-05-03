@@ -1,0 +1,12 @@
+services:
+  agro-iot-dashboard:
+    build: .
+    container_name: agro-iot-dashboard
+    ports:
+      - 9002:80
+    restart: always
+
+networks:
+  default:
+    name: agronetwork
+    external: true

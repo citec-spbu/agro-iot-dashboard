@@ -1,0 +1,182 @@
+<template>
+  <section class="page-stack">
+    <div class="page-heading">
+      <div>
+        <p class="eyebrow">Добавить станцию</p>
+        <h2>Регистрация метеостанции</h2>
+      </div>
+    </div>
+
+    <div v-if="!tokenReady" class="banner banner--warning">
+      <strong>Ожидание авторизации от основного Smart.Agromelio.</strong>
+      <span>Форма доступна для заполнения, но регистрация включится после получения сессии.</span>
+    </div>
+
+    <form class="card form-card" @submit.prevent="submit">
+      <div class="form-grid">
+        <label class="form-label">
+          ID поля *
+          <input
+            v-model.trim="form.field_id"
+            class="input"
+            type="text"
+            required
+            placeholder="UUID поля"
+          />
+        </label>
+
+        <label class="form-label">
+          ID метеостанции *
+          <input v-model.number="form.hardware_id" class="input" type="number" min="1" required placeholder="Например: 1001" />
+        </label>
+
+        <label class="form-label form-grid__wide">
+          Название станции
+          <input v-model.trim="form.name" class="input" type="text" placeholder="Например: Метеостанция 1" />
+        </label>
+
+        <label class="form-label">
+          Широта
+          <input v-model.number="form.latitude" class="input" type="number" min="-90" max="90" step="0.000001" placeholder="Например: 59.9391" />
+        </label>
+
+        <label class="form-label">
+          Долгота
+          <input v-model.number="form.longitude" class="input" type="number" min="-180" max="180" step="0.000001" placeholder="Например: 30.3158" />
+        </label>
+      </div>
+
+      <div v-if="validationError" class="banner banner--warning form-warning">
+        <strong>Форма заполнена некорректно.</strong>
+        <span>{{ validationError }}</span>
+      </div>
+
+      <div class="actions">
+        <button class="btn btn--primary" type="submit" :disabled="submitting || !tokenReady">
+          {{ submitting ? 'Регистрируем…' : 'Зарегистрировать' }}
+        </button>
+        <button class="btn btn--ghost" type="button" @click="resetForm">Очистить</button>
+      </div>
+    </form>
+
+    <ErrorState v-if="error" title="Регистрация не выполнена" :message="error" />
+
+    <article v-if="createdStation" class="card success-card">
+      <div class="banner banner--success">
+        <strong>Станция зарегистрирована.</strong>
+        <span>{{ coordsMessage }}</span>
+      </div>
+
+      <div class="created-station">
+        <div><span>ID поля</span><code>{{ createdStation?.field_id }}</code></div>
+        <div><span>ID метеостанции</span><strong>{{ createdStation?.hardware_id }}</strong></div>
+        <div><span>Название</span><strong>{{ createdStation?.name || '—' }}</strong></div>
+        <div><span>Широта</span><strong>{{ createdStation?.latitude ?? '—' }}</strong></div>
+        <div><span>Долгота</span><strong>{{ createdStation?.longitude ?? '—' }}</strong></div>
+      </div>
+
+      <RouterLink :to="`/stations/${createdStation?.field_id}`" class="btn btn--primary">Открыть станцию</RouterLink>
+    </article>
+  </section>
+</template>
+
+<script setup>
+import { computed, onMounted, onUnmounted, reactive, ref } from 'vue'
+import ErrorState from '../components/ErrorState.vue'
+import { registerStation } from '../api/iotApi'
+import { getErrorMessage, hasToken, TOKEN_CHANGED_EVENT } from '../api/http'
+import { normalizeCreatedStation } from '../utils/summary'
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+
+const submitting = ref(false)
+const error = ref('')
+const created = ref(null)
+const validationError = ref('')
+const tokenReady = ref(hasToken())
+
+const form = reactive({
+  field_id: '',
+  hardware_id: null,
+  name: '',
+  latitude: null,
+  longitude: null,
+})
+
+const createdStation = computed(() => normalizeCreatedStation(created.value).station)
+
+const coordsMessage = computed(() => {
+  const coords = normalizeCreatedStation(created.value).coords_match_field
+  if (coords === true) return 'Координаты станции находятся внутри выбранного поля.'
+  if (coords === false) return 'Координаты станции находятся вне контура выбранного поля.'
+  return 'Не удалось проверить, попадает ли станция в контур поля.'
+})
+
+function validateForm() {
+  if (!UUID_RE.test(form.field_id)) return 'Укажите корректный UUID поля из Smart.Agromelio.'
+  if (!Number.isInteger(Number(form.hardware_id)) || Number(form.hardware_id) <= 0) return 'ID метеостанции должен быть положительным целым числом.'
+  if (form.latitude !== null && form.latitude !== '' && !isInRange(Number(form.latitude), -90, 90)) return 'Широта должна быть числом от -90 до 90.'
+  if (form.longitude !== null && form.longitude !== '' && !isInRange(Number(form.longitude), -180, 180)) return 'Долгота должна быть числом от -180 до 180.'
+  return ''
+}
+
+function isInRange(value, min, max) {
+  return Number.isFinite(value) && value >= min && value <= max
+}
+
+function buildPayload() {
+  return {
+    field_id: form.field_id,
+    hardware_id: Number(form.hardware_id),
+    name: form.name || null,
+    latitude: form.latitude === '' || form.latitude === null ? null : Number(form.latitude),
+    longitude: form.longitude === '' || form.longitude === null ? null : Number(form.longitude),
+  }
+}
+
+async function submit() {
+  tokenReady.value = hasToken()
+  if (!tokenReady.value) {
+    error.value = 'Авторизация ещё не получена. Откройте модуль через основной Smart.Agromelio или войдите заново.'
+    return
+  }
+
+  validationError.value = validateForm()
+  if (validationError.value) return
+
+  submitting.value = true
+  error.value = ''
+  created.value = null
+  try {
+    created.value = await registerStation(buildPayload())
+  } catch (err) {
+    error.value = getErrorMessage(err)
+  } finally {
+    submitting.value = false
+  }
+}
+
+function onTokenChanged() {
+  tokenReady.value = hasToken()
+}
+
+onMounted(() => {
+  window.addEventListener(TOKEN_CHANGED_EVENT, onTokenChanged)
+  tokenReady.value = hasToken()
+})
+
+onUnmounted(() => {
+  window.removeEventListener(TOKEN_CHANGED_EVENT, onTokenChanged)
+})
+
+function resetForm() {
+  form.field_id = ''
+  form.hardware_id = null
+  form.name = ''
+  form.latitude = null
+  form.longitude = null
+  validationError.value = ''
+  error.value = ''
+  created.value = null
+}
+</script>
