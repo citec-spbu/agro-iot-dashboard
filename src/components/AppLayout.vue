@@ -1,40 +1,30 @@
 <template>
   <div class="app-shell">
-    <aside class="sidebar">
-      <RouterLink to="/dashboard" class="brand" aria-label="Smart.Agromelio IoT">
-        <span class="brand__mark">SA</span>
-        <span>
-          <strong>Smart.Agromelio</strong>
-          <small>Модуль датчиков</small>
-        </span>
-      </RouterLink>
-
-      <nav class="nav-list" aria-label="Навигация модуля датчиков">
-        <RouterLink to="/dashboard" class="nav-link">
-          <span>Станции</span>
-        </RouterLink>
-        <RouterLink to="/register" class="nav-link">
-          <span>Добавить станцию</span>
-        </RouterLink>
-      </nav>
-    </aside>
-
-    <div class="app-main">
-      <header class="topbar">
+    <main class="page-container">
+      <section class="module-header card">
         <div>
           <p class="eyebrow">Агрометеорологический модуль</p>
           <h1>{{ routeTitle }}</h1>
+          <p class="module-header__subtitle">
+            Мониторинг метеостанций и почвенных датчиков Smart.Agromelio.
+          </p>
         </div>
-        <div class="topbar__status">
-          <span class="connection-dot" :class="hasAuthToken ? 'connection-dot--ok' : 'connection-dot--warn'" />
-          <span>{{ hasAuthToken ? 'Сессия активна' : 'Ожидание авторизации' }}</span>
-        </div>
-      </header>
 
-      <main class="page-container">
-        <RouterView />
-      </main>
-    </div>
+        <div class="module-header__right">
+          <div class="topbar__status">
+            <span class="connection-dot" :class="hasAuthToken ? 'connection-dot--ok' : 'connection-dot--warn'" />
+            <span>{{ hasAuthToken ? 'Сессия активна' : 'Ожидание авторизации' }}</span>
+          </div>
+
+          <nav class="module-tabs" aria-label="Навигация IoT-модуля">
+            <RouterLink to="/dashboard" class="module-tab">Станции</RouterLink>
+            <RouterLink to="/register" class="module-tab">Добавить станцию</RouterLink>
+          </nav>
+        </div>
+      </section>
+
+      <RouterView />
+    </main>
   </div>
 </template>
 

@@ -80,6 +80,7 @@ http.interceptors.request.use((config) => {
   if (devAuthorization) {
     config.headers.Authorization = devAuthorization
   }
+
   return config
 })
 
@@ -99,6 +100,7 @@ export function normalizeApiError(error) {
   normalized.data = data
   normalized.original = error
   normalized.isNetworkError = !error?.response
+
   return normalized
 }
 
@@ -107,22 +109,48 @@ function buildMessage(status, detail, error) {
     if (error?.code === 'ECONNABORTED') {
       return 'Сервис датчиков не ответил вовремя. Попробуйте снова или обратитесь к администратору.'
     }
-    return 'Сервис датчиков недоступен. Проверьте подключение к интернету или обратитесь к адМинимумистратору, если проблема сохраняется.'
+
+    return 'Сервис датчиков недоступен. Проверьте подключение к интернету или обратитесь к администратору, если проблема сохраняется.'
   }
 
-  if (status === 401) return 'Авторизация не получена. Откройте IoT-модуль через основной Smart.Agromelio или войдите заново.'
-  if (status === 403) return 'У вас нет доступа к этим данным. Проверьте, что вы вошли в нужную организацию.'
-  if (status === 404) return extractDetail(detail) || 'Данные не найдены. Возможно, станция ещё не зарегистрирована или по ней пока нет измерений.'
-  if (status === 409) return duplicateMessage(detail)
-  if (status === 422) return formatValidationError(detail)
-  if (status >= 500) return extractDetail(detail) || 'Ошибка сервиса датчиков. Пожалуйста, попробуйте позже или обратитесь к адМинимумистратору.'
+  if (status === 401) {
+    return 'Авторизация не получена. Откройте IoT-модуль через основной Smart.Agromelio или войдите заново.'
+  }
+
+  if (status === 403) {
+    return 'У вас нет доступа к этим данным. Проверьте, что вы вошли в нужную организацию.'
+  }
+
+  if (status === 404) {
+    return extractDetail(detail) || 'Данные не найдены. Возможно, станция ещё не зарегистрирована или по ней пока нет измерений.'
+  }
+
+  if (status === 409) {
+    return duplicateMessage(detail)
+  }
+
+  if (status === 422) {
+    return formatValidationError(detail)
+  }
+
+  if (status >= 500) {
+    return extractDetail(detail) || 'Ошибка сервиса датчиков. Пожалуйста, попробуйте позже или обратитесь к администратору.'
+  }
+
   return extractDetail(detail) || `Не удалось выполнить запрос. Код ошибки: ${status}`
 }
 
 function duplicateMessage(detail) {
   const text = extractDetail(detail).toLowerCase()
-  if (text.includes('hardware')) return 'Станция с таким серийным номером уже зарегистрирована.'
-  if (text.includes('field')) return 'Для этого поля уже зарегистрирована метеостанция.'
+
+  if (text.includes('hardware')) {
+    return 'Станция с таким серийным номером уже зарегистрирована.'
+  }
+
+  if (text.includes('field')) {
+    return 'Для этого поля уже зарегистрирована метеостанция.'
+  }
+
   return extractDetail(detail) || 'Такая станция уже зарегистрирована.'
 }
 
@@ -135,6 +163,7 @@ function formatValidationError(detail) {
       })
       .join('; ')
   }
+
   return extractDetail(detail) || 'Проверьте правильность заполнения формы.'
 }
 
@@ -142,6 +171,7 @@ function extractDetail(detail) {
   if (!detail) return ''
   if (typeof detail === 'string') return detail
   if (typeof detail === 'object' && typeof detail.detail === 'string') return detail.detail
+
   try {
     return JSON.stringify(detail)
   } catch {

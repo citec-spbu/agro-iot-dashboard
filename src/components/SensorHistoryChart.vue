@@ -1,18 +1,20 @@
 <template>
-  <article class="chart-card chart-card--embedded">
+  <article class="card chart-card">
     <div class="card-header">
       <div>
-        <p class="eyebrow">История измерений датчика</p>
-        <h3>Температура и влажность почвы</h3>
+        <p class="eyebrow">История</p>
+        <h3>История измерений метеостанции</h3>
       </div>
+
       <span class="badge badge--soft">{{ sortedHistory.length }} точек</span>
     </div>
 
     <EmptyState
       v-if="!sortedHistory.length"
-      title="Истории измерений пока нет"
-      message="За выбранный период измерения от этого датчика не поступали."
+      title="История измерений метеостанции"
+      message="За выбранный период измерения от метеостанции не поступали."
     />
+
     <div v-else class="chart-frame">
       <Line :data="chartData" :options="chartOptions" />
     </div>
@@ -63,20 +65,29 @@ const chartData = computed(() => ({
   labels: sortedHistory.value.map((row) => formatShortDateTime(row.date_time)),
   datasets: [
     {
-      metricName: 'temperature',
-      label: 'Температура',
-      data: valuesFor('temperature'),
-      borderColor: '#c2410c',
-      backgroundColor: 'rgba(194, 65, 12, 0.12)',
+      metricName: 'wind_speed',
+      label: 'Скорость ветра',
+      data: valuesFor('wind_speed'),
+      borderColor: '#2f67d8',
+      backgroundColor: 'rgba(47, 103, 216, 0.12)',
       tension: 0.35,
       spanGaps: true,
     },
     {
-      metricName: 'soil_moisture',
-      label: 'Влажность почвы',
-      data: valuesFor('soil_moisture'),
-      borderColor: '#2f8f46',
-      backgroundColor: 'rgba(47, 143, 70, 0.12)',
+      metricName: 'rain',
+      label: 'Осадки',
+      data: valuesFor('rain'),
+      borderColor: '#20b86a',
+      backgroundColor: 'rgba(32, 184, 106, 0.12)',
+      tension: 0.35,
+      spanGaps: true,
+    },
+    {
+      metricName: 'wind_direction',
+      label: 'Направление ветра',
+      data: valuesFor('wind_direction'),
+      borderColor: '#f2ba4e',
+      backgroundColor: 'rgba(242, 186, 78, 0.14)',
       tension: 0.35,
       spanGaps: true,
     },

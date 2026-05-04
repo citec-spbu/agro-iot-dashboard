@@ -1,52 +1,105 @@
 <template>
-  <article class="card sensor-card">
-    <div class="card-header">
+  <article class="card station-card">
+    <div class="station-card__header">
       <div>
-        <p class="eyebrow">Почвенный датчик</p>
-        <h3>Датчик №{{ sensor?.sensor_id }}</h3>
+        <p class="eyebrow">ID метеостанции: {{ station?.hardware_id ?? '—' }}</p>
+        <h3>{{ stationTitle }}</h3>
       </div>
-      <span class="badge badge--soft">{{ formatDateTime(sensor?.last_data_at || sensor?.last?.date_time) }}</span>
+
+      <span class="badge" :class="item?.online ? 'badge--success' : 'badge--muted'">
+        {{ item?.online ? 'в сети' : 'не в сети' }}
+      </span>
     </div>
 
-    <ErrorState v-if="sensor?.error" title="Не удалось загрузить данные датчика" :message="sensor.error" />
-
-    <template v-else>
-      <EmptyState
-        v-if="!hasLastData"
-        title="Данных от датчика пока нет"
-        message="Данные появятся после получения первого сообщения от почвенного датчика."
-      />
-      <div v-else class="metric-grid metric-grid--compact">
-        <MetricCard v-for="metric in metrics" :key="metric.label" :metric="metric" />
+    <dl class="meta-list">
+      <div>
+        <dt>ID поля</dt>
+        <dd><code>{{ station?.field_id || '—' }}</code></dd>
       </div>
 
-      <SummaryCard :summary="summary" title="Сводка по датчику" />
+      <div>
+        <dt>Последняя активность</dt>
+        <dd>{{ formatDateTime(station?.last_seen_at) }}</dd>
+      </div>
 
-      <SensorHistoryChart :history="sensor?.history || []" />
-    </template>
+      <div>
+        <dt>Последняя запись</dt>
+        <dd>{{ formatDateTime(item?.last_data_at) }}</dd>
+      </div>
+    </dl>
+
+    <div class="metric-grid metric-grid--compact">
+      <MetricCard
+        v-for="metric in stationMetrics"
+        :key="metric.label"
+        :metric="metric"
+      />
+    </div>
+
+    <div class="sensor-preview">
+      <div class="sensor-preview__head">
+        <strong>Почвенные датчики</strong>
+        <span>{{ sensors.length }}</span>
+      </div>
+
+      <div v-if="sensors.length" class="sensor-preview__list">
+        <div
+          v-for="sensor in sensors.slice(0, 3)"
+          :key="sensor.sensor_id"
+          class="sensor-preview__item"
+        >
+          <span>Датчик №{{ sensor.sensor_id }}</span>
+          <small>{{ sensorSummary(sensor) }}</small>
+        </div>
+
+        <small v-if="sensors.length > 3" class="muted">
+          +{{ sensors.length - 3 }} ещё
+        </small>
+      </div>
+
+      <p v-else class="muted">Данные от почвенных датчиков пока не поступали.</p>
+    </div>
+
+    <RouterLink
+      v-if="station?.field_id"
+      :to="stationLink"
+      class="btn btn--primary station-card__button"
+    >
+      Открыть станцию
+    </RouterLink>
+
+    <span v-else class="hint">
+      Не удалось открыть станцию: нет данных о привязанном поле.
+    </span>
   </article>
 </template>
 
 <script setup>
 import { computed } from 'vue'
-import EmptyState from './EmptyState.vue'
-import ErrorState from './ErrorState.vue'
 import MetricCard from './MetricCard.vue'
-import SummaryCard from './SummaryCard.vue'
-import SensorHistoryChart from './SensorHistoryChart.vue'
 import { formatDateTime } from '../utils/dates'
 import { formatMetric } from '../utils/formatMeasurements'
-import { hasPayload } from '../utils/summary'
+import { getStationName, safeArray } from '../utils/summary'
 
 const props = defineProps({
-  sensor: { type: Object, required: true },
+  item: { type: Object, required: true },
 })
 
-const lastPayload = computed(() => props.sensor?.last_data || props.sensor?.last?.payload || {})
-const hasLastData = computed(() => hasPayload(lastPayload.value))
-const summary = computed(() => props.sensor?.summary || null)
-const metrics = computed(() => [
-  formatMetric('temperature', lastPayload.value.temperature),
-  formatMetric('soil_moisture', lastPayload.value.soil_moisture),
-])
+const station = computed(() => props.item?.station || {})
+const sensors = computed(() => safeArray(props.item?.sensors))
+const stationTitle = computed(() => getStationName(station.value))
+const stationLink = computed(() => `/stations/${station.value?.field_id}`)
+
+const stationMetrics = computed(() => {
+  const payload = props.item?.last_data || {}
+  return ['wind_speed', 'wind_direction', 'rain'].map((name) => formatMetric(name, payload?.[name]))
+})
+
+function sensorSummary(sensor) {
+  const payload = sensor?.last_data || {}
+  const temp = formatMetric('temperature', payload.temperature)
+  const humidity = formatMetric('soil_moisture', payload.soil_moisture)
+
+  return `${temp.value} ${temp.unit}, ${humidity.value} ${humidity.unit}`
+}
 </script>
