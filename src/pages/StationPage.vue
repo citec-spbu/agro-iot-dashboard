@@ -80,6 +80,25 @@
           <SensorCard v-for="sensor in sensors" :key="sensor.sensor_id" :sensor="sensor" />
         </div>
       </section>
+
+      <section v-if="sensors.length" class="section-block">
+        <div class="section-title">
+          <div>
+            <p class="eyebrow">История почвенных датчиков</p>
+            <h3>Температура и влажность почвы по времени</h3>
+          </div>
+          <span class="badge badge--soft">{{ sensors.length }} граф.</span>
+        </div>
+
+        <div class="sensor-chart-grid">
+          <SensorHistoryChart
+            v-for="sensor in sensors"
+            :key="`sensor-chart-${sensor.sensor_id}`"
+            :sensor-id="sensor.sensor_id"
+            :history="sensor.history"
+          />
+        </div>
+      </section>
     </template>
   </section>
 </template>
@@ -93,6 +112,7 @@ import LoadingState from '../components/LoadingState.vue'
 import MetricCard from '../components/MetricCard.vue'
 import PeriodSelector from '../components/PeriodSelector.vue'
 import SensorCard from '../components/SensorCard.vue'
+import SensorHistoryChart from '../components/SensorHistoryChart.vue'
 import StationHistoryChart from '../components/StationHistoryChart.vue'
 import SummaryCard from '../components/SummaryCard.vue'
 import {

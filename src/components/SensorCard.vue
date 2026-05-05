@@ -1,76 +1,39 @@
 <template>
-  <article class="card station-card">
+  <article class="card sensor-card">
     <div class="station-card__header">
       <div>
-        <p class="eyebrow">ID метеостанции: {{ station?.hardware_id ?? '—' }}</p>
-        <h3>{{ stationTitle }}</h3>
+        <p class="eyebrow">Почвенный датчик</p>
+        <h3>Датчик №{{ sensor?.sensor_id ?? '—' }}</h3>
       </div>
 
-      <span class="badge" :class="item?.online ? 'badge--success' : 'badge--muted'">
-        {{ item?.online ? 'в сети' : 'не в сети' }}
-      </span>
+      <span class="badge badge--soft">{{ formatDateTime(sensor?.last_data_at) }}</span>
+    </div>
+
+    <div v-if="sensor?.error" class="banner banner--warning">
+      <strong>Часть данных датчика не загрузилась.</strong>
+      <span>{{ sensor.error }}</span>
     </div>
 
     <dl class="meta-list">
       <div>
-        <dt>ID поля</dt>
-        <dd><code>{{ station?.field_id || '—' }}</code></dd>
-      </div>
-
-      <div>
-        <dt>Последняя активность</dt>
-        <dd>{{ formatDateTime(station?.last_seen_at) }}</dd>
+        <dt>ID датчика</dt>
+        <dd>{{ sensor?.sensor_id ?? '—' }}</dd>
       </div>
 
       <div>
         <dt>Последняя запись</dt>
-        <dd>{{ formatDateTime(item?.last_data_at) }}</dd>
+        <dd>{{ formatDateTime(sensor?.last_data_at) }}</dd>
+      </div>
+
+      <div>
+        <dt>Точек истории</dt>
+        <dd>{{ historyCount }}</dd>
       </div>
     </dl>
 
     <div class="metric-grid metric-grid--compact">
-      <MetricCard
-        v-for="metric in stationMetrics"
-        :key="metric.label"
-        :metric="metric"
-      />
+      <MetricCard v-for="metric in sensorMetrics" :key="metric.label" :metric="metric" />
     </div>
-
-    <div class="sensor-preview">
-      <div class="sensor-preview__head">
-        <strong>Почвенные датчики</strong>
-        <span>{{ sensors.length }}</span>
-      </div>
-
-      <div v-if="sensors.length" class="sensor-preview__list">
-        <div
-          v-for="sensor in sensors.slice(0, 3)"
-          :key="sensor.sensor_id"
-          class="sensor-preview__item"
-        >
-          <span>Датчик №{{ sensor.sensor_id }}</span>
-          <small>{{ sensorSummary(sensor) }}</small>
-        </div>
-
-        <small v-if="sensors.length > 3" class="muted">
-          +{{ sensors.length - 3 }} ещё
-        </small>
-      </div>
-
-      <p v-else class="muted">Данные от почвенных датчиков пока не поступали.</p>
-    </div>
-
-    <RouterLink
-      v-if="station?.field_id"
-      :to="stationLink"
-      class="btn btn--primary station-card__button"
-    >
-      Открыть станцию
-    </RouterLink>
-
-    <span v-else class="hint">
-      Не удалось открыть станцию: нет данных о привязанном поле.
-    </span>
   </article>
 </template>
 
@@ -79,27 +42,16 @@ import { computed } from 'vue'
 import MetricCard from './MetricCard.vue'
 import { formatDateTime } from '../utils/dates'
 import { formatMetric } from '../utils/formatMeasurements'
-import { getStationName, safeArray } from '../utils/summary'
+import { safeArray } from '../utils/summary'
 
 const props = defineProps({
-  item: { type: Object, required: true },
+  sensor: { type: Object, required: true },
 })
 
-const station = computed(() => props.item?.station || {})
-const sensors = computed(() => safeArray(props.item?.sensors))
-const stationTitle = computed(() => getStationName(station.value))
-const stationLink = computed(() => `/stations/${station.value?.field_id}`)
+const historyCount = computed(() => safeArray(props.sensor?.history).length)
 
-const stationMetrics = computed(() => {
-  const payload = props.item?.last_data || {}
-  return ['wind_speed', 'wind_direction', 'rain'].map((name) => formatMetric(name, payload?.[name]))
+const sensorMetrics = computed(() => {
+  const payload = props.sensor?.last_data || props.sensor?.last?.payload || {}
+  return ['temperature', 'soil_moisture'].map((name) => formatMetric(name, payload?.[name]))
 })
-
-function sensorSummary(sensor) {
-  const payload = sensor?.last_data || {}
-  const temp = formatMetric('temperature', payload.temperature)
-  const humidity = formatMetric('soil_moisture', payload.soil_moisture)
-
-  return `${temp.value} ${temp.unit}, ${humidity.value} ${humidity.unit}`
-}
 </script>

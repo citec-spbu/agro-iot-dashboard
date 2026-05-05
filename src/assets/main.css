@@ -838,3 +838,7 @@ html.host-dark .summary-table__row {
     grid-template-columns: 1fr;
   }
 }
+.sensor-chart-grid {
+  display: grid;
+  gap: 16px;
+}

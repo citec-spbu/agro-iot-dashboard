@@ -1,9 +1,9 @@
 <template>
-  <article class="chart-card chart-card--embedded">
+  <article class="card chart-card">
     <div class="card-header">
       <div>
-        <p class="eyebrow">История измерений датчика</p>
-        <h3>Температура и влажность почвы</h3>
+        <p class="eyebrow">История метеостанции</p>
+        <h3>Скорость ветра, направление ветра и осадки</h3>
       </div>
 
       <span class="badge badge--soft">{{ sortedHistory.length }} точек</span>
@@ -11,8 +11,8 @@
 
     <EmptyState
       v-if="!sortedHistory.length"
-      title="Истории измерений пока нет"
-      message="За выбранный период измерения от этого датчика не поступали."
+      title="Истории измерений метеостанции пока нет"
+      message="За выбранный период измерения от метеостанции не поступали."
     />
 
     <div v-else class="chart-frame">
@@ -65,20 +65,29 @@ const chartData = computed(() => ({
   labels: sortedHistory.value.map((row) => formatShortDateTime(row.date_time)),
   datasets: [
     {
-      metricName: 'temperature',
-      label: 'Температура',
-      data: valuesFor('temperature'),
-      borderColor: '#d9465d',
-      backgroundColor: 'rgba(217, 70, 93, 0.12)',
+      metricName: 'wind_speed',
+      label: 'Скорость ветра',
+      data: valuesFor('wind_speed'),
+      borderColor: '#2f67d8',
+      backgroundColor: 'rgba(47, 103, 216, 0.12)',
       tension: 0.35,
       spanGaps: true,
     },
     {
-      metricName: 'soil_moisture',
-      label: 'Влажность почвы',
-      data: valuesFor('soil_moisture'),
-      borderColor: '#2f67d8',
-      backgroundColor: 'rgba(47, 103, 216, 0.12)',
+      metricName: 'rain',
+      label: 'Осадки',
+      data: valuesFor('rain'),
+      borderColor: '#20b86a',
+      backgroundColor: 'rgba(32, 184, 106, 0.12)',
+      tension: 0.35,
+      spanGaps: true,
+    },
+    {
+      metricName: 'wind_direction',
+      label: 'Направление ветра',
+      data: valuesFor('wind_direction'),
+      borderColor: '#f2ba4e',
+      backgroundColor: 'rgba(242, 186, 78, 0.14)',
       tension: 0.35,
       spanGaps: true,
     },
@@ -101,7 +110,8 @@ const chartOptions = {
           const metricName = context.dataset.metricName
           const row = sortedHistory.value[context.dataIndex]
           const metric = formatMetric(metricName, row?.payload?.[metricName])
-          return `${metric.label}: ${metric.value} ${metric.unit} · значение от устройства: ${metric.raw ?? '—'}`
+          const unit = metric.unit ? ` ${metric.unit}` : ''
+          return `${metric.label}: ${metric.value}${unit} · значение от устройства: ${metric.raw ?? '—'}`
         },
       },
     },
