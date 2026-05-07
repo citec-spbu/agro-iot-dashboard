@@ -286,11 +286,11 @@ html.host-dark .module-tab {
 }
 
 .metric-grid {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
 }
 
 .metric-grid--compact {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   gap: 12px;
 }
 
@@ -589,8 +589,9 @@ html.host-dark .btn--ghost {
 }
 
 .form-card,
-.token-settings {
-  max-width: 920px;
+.token-settings,
+.field-directory-card {
+  max-width: 1100px;
 }
 
 .form-grid {
@@ -838,7 +839,13 @@ html.host-dark .summary-table__row {
     grid-template-columns: 1fr;
   }
 }
-.sensor-chart-grid {
-  display: grid;
-  gap: 16px;
+
+@media (max-width: 840px) {
+  .field-directory__head {
+    display: none;
+  }
+
+  .field-directory__row {
+    grid-template-columns: 1fr;
+  }
 }

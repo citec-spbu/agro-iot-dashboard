@@ -2,7 +2,7 @@
   <article class="card station-card">
     <div class="station-card__header">
       <div>
-        <p class="eyebrow">ID метеостанции:{{ station?.hardware_id ?? '—' }}</p>
+        <p class="eyebrow">ID метеостанции: {{ station?.hardware_id ?? '—' }}</p>
         <h3>{{ stationTitle }}</h3>
       </div>
       <span class="badge" :class="item?.online ? 'badge--success' : 'badge--muted'">
@@ -59,7 +59,7 @@
 import { computed } from 'vue'
 import MetricCard from './MetricCard.vue'
 import { formatDateTime } from '../utils/dates'
-import { formatMetric } from '../utils/formatMeasurements'
+import { formatMetric, sensorMetricNames, STATION_METRICS } from '../utils/formatMeasurements'
 import { getStationName, safeArray } from '../utils/summary'
 
 const props = defineProps({
@@ -73,13 +73,19 @@ const stationLink = computed(() => `/stations/${station.value?.field_id}`)
 
 const stationMetrics = computed(() => {
   const payload = props.item?.last_data || {}
-  return ['wind_speed', 'wind_direction', 'rain'].map((name) => formatMetric(name, payload?.[name]))
+  return STATION_METRICS.map((name) => formatMetric(name, payload?.[name]))
 })
 
 function sensorSummary(sensor) {
   const payload = sensor?.last_data || {}
-  const temp = formatMetric('temperature', payload.temperature)
-  const humidity = formatMetric('soil_moisture', payload.soil_moisture)
-  return `${temp.value} ${temp.unit}, ${humidity.value} ${humidity.unit}`
+  const metricNames = sensorMetricNames(payload).slice(0, 2)
+  if (!metricNames.length) return 'последних данных нет'
+
+  return metricNames
+    .map((name) => {
+      const metric = formatMetric(name, payload[name])
+      return `${metric.label}: ${metric.value}${metric.unit ? ` ${metric.unit}` : ''}`
+    })
+    .join(', ')
 }
 </script>

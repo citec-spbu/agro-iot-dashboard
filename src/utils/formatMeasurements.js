@@ -1,10 +1,42 @@
 const METRIC_LABELS = {
-  temperature: 'Температура',
-  soil_moisture: 'Влажность почвы',
+  temperature: 'Температура станции',
+  soil_moisture: 'Влажность станции',
   wind_speed: 'Скорость ветра',
   wind_direction: 'Направление ветра',
   rain: 'Осадки',
+  temperaturea: 'Температура на поверхности',
+  soil_moisturea: 'Влажность на поверхности',
+  temperaturez: 'Температура под землёй',
+  soil_moisturez: 'Влажность под землёй',
 }
+
+const METRIC_UNITS = {
+  temperature: '°F',
+  soil_moisture: '%',
+  wind_speed: 'км/ч',
+  wind_direction: '°',
+  rain: 'мм',
+  temperaturea: '',
+  soil_moisturea: '%',
+  temperaturez: '',
+  soil_moisturez: '%',
+}
+
+const METRIC_DIGITS = {
+  temperature: 1,
+  soil_moisture: 0,
+  wind_speed: 1,
+  wind_direction: 0,
+  rain: 1,
+  temperaturea: 0,
+  soil_moisturea: 0,
+  temperaturez: 0,
+  soil_moisturez: 0,
+}
+
+export const STATION_METRICS = ['temperature', 'soil_moisture', 'wind_speed', 'wind_direction', 'rain']
+export const SENSOR_METRICS = ['temperaturea', 'soil_moisturea', 'temperaturez', 'soil_moisturez']
+export const LEGACY_SENSOR_METRICS = ['temperature', 'soil_moisture']
 
 function isFiniteNumber(value) {
   return typeof value === 'number' && Number.isFinite(value)
@@ -31,141 +63,27 @@ function metricResult({ label, value, unit, raw, isConverted, hint = '' }) {
   }
 }
 
-function toUnsigned16(raw) {
+function formatDirect(metricName, raw) {
   const value = asNumber(raw)
-  if (!isFiniteNumber(value)) return null
-  const integer = Math.trunc(value)
-  return integer < 0 ? integer + 0x10000 : integer
-}
+  const unit = METRIC_UNITS[metricName] || ''
+  const label = METRIC_LABELS[metricName] || metricName
+  const digits = METRIC_DIGITS[metricName] ?? 1
 
-function splitHighLow(raw) {
-  const unsigned = toUnsigned16(raw)
-  if (!isFiniteNumber(unsigned) || unsigned < 0 || unsigned > 0xffff) return null
-  return {
-    high: (unsigned >> 8) & 0xff,
-    low: unsigned & 0xff,
-  }
-}
-
-function decodeOffsetEncodedPair(raw, divisor = 1) {
-  const bytes = splitHighLow(raw)
-  if (!bytes) return null
-
-  // В аппаратном протоколе оба байта кодируются со смещением +1.
-  // Если один из байтов равен 0, значение не похоже на такой пакет
-  // и, скорее всего, было внесено как уже декодированное demo-значение.
-  if (bytes.high < 1 || bytes.low < 1) return null
-
-  return (((bytes.high - 1) << 8) + bytes.low - 1) / divisor
-}
-
-function decodedOrDirect(raw, divisor, digits) {
-  const encoded = decodeOffsetEncodedPair(raw, divisor)
-  const direct = asNumber(raw)
-
-  if (isFiniteNumber(encoded)) {
-    return {
-      value: decimal(encoded, digits),
-      converted: true,
-      //hintSuffix: 'Значение автоматически преобразовано из формата, в котором его передала станция.',
-    }
-  }
-
-  if (isFiniteNumber(direct)) {
-    return {
-      value: decimal(direct, digits),
-      converted: false,
-      //hintSuffix: 'Значение отображается без дополнительного преобразования.',
-    }
-  }
-
-  return {
-    value: '—',
-    converted: false,
-    hintSuffix: '',
-  }
-}
-
-export function formatTemperature(raw) {
-  const value = asNumber(raw)
   if (!isFiniteNumber(value)) {
-    return metricResult({ label: METRIC_LABELS.temperature, value: '—', unit: '°F', raw, isConverted: false })
+    return metricResult({ label, value: '—', unit, raw, isConverted: false })
   }
-  return metricResult({
-    label: METRIC_LABELS.temperature,
-    value: decimal((value - 900) / 10, 1),
-    unit: '°F',
-    raw,
-    isConverted: true,
-    //hint: 'Температура автоматически преобразована из значения, переданного датчиком.',
-  })
-}
 
-export function formatSoilMoisture(raw) {
-  const value = asNumber(raw)
-  if (!isFiniteNumber(value)) {
-    return metricResult({ label: METRIC_LABELS.soil_moisture, value: '—', unit: '%', raw, isConverted: false })
-  }
   return metricResult({
-    label: METRIC_LABELS.soil_moisture,
-    value: decimal(value, 0),
-    unit: '%',
+    label,
+    value: decimal(value, digits),
+    unit,
     raw,
-    isConverted: true,
-    //hint: 'Температура автоматически преобразована из значения, переданного датчиком.',
-  })
-}
-
-export function formatWindSpeed(raw) {
-  const prepared = decodedOrDirect(raw, 5, 1)
-  return metricResult({
-    label: METRIC_LABELS.wind_speed,
-    value: prepared.value,
-    unit: 'км/ч',
-    raw,
-    isConverted: prepared.converted,
-    //hint: `Значение автоматически преобразовано из формата метеостанции.`,
-  })
-}
-
-export function formatWindDirection(raw) {
-  const prepared = decodedOrDirect(raw, 1, 0)
-  return metricResult({
-    label: METRIC_LABELS.wind_direction,
-    value: prepared.value,
-    unit: '°',
-    raw,
-    isConverted: prepared.converted,
-    //hint: `Значение автоматически преобразовано из формата метеостанции.`,
-  })
-}
-
-export function formatRain(raw) {
-  const prepared = decodedOrDirect(raw, 5, 1)
-  return metricResult({
-    label: METRIC_LABELS.rain,
-    value: prepared.value,
-    unit: 'мм',
-    raw,
-    isConverted: prepared.converted,
-    //hint: `Значение автоматически преобразовано из формата метеостанции.`,
+    isConverted: false,
   })
 }
 
 export function formatMetric(metricName, raw) {
-  if (metricName === 'temperature') return formatTemperature(raw)
-  if (metricName === 'soil_moisture') return formatSoilMoisture(raw)
-  if (metricName === 'wind_speed') return formatWindSpeed(raw)
-  if (metricName === 'wind_direction') return formatWindDirection(raw)
-  if (metricName === 'rain') return formatRain(raw)
-
-  return metricResult({
-    label: METRIC_LABELS[metricName] || metricName,
-    value: raw ?? '—',
-    unit: '',
-    raw,
-    isConverted: false,
-  })
+  return formatDirect(metricName, raw)
 }
 
 export function metricToNumber(metric) {
@@ -175,4 +93,19 @@ export function metricToNumber(metric) {
 
 export function getMetricLabel(metricName) {
   return METRIC_LABELS[metricName] || metricName
+}
+
+export function getMetricUnit(metricName) {
+  return METRIC_UNITS[metricName] || ''
+}
+
+export function availableMetrics(payload, preferredMetrics) {
+  const source = payload && typeof payload === 'object' ? payload : {}
+  return preferredMetrics.filter((name) => Object.prototype.hasOwnProperty.call(source, name))
+}
+
+export function sensorMetricNames(payload) {
+  const names = availableMetrics(payload, SENSOR_METRICS)
+  if (names.length) return names
+  return availableMetrics(payload, LEGACY_SENSOR_METRICS)
 }

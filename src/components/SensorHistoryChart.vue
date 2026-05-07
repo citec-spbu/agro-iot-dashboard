@@ -2,8 +2,8 @@
   <article class="chart-card chart-card--embedded">
     <div class="card-header">
       <div>
-        <p class="eyebrow">История почвенного датчика</p>
-        <h3>{{ chartTitle }}</h3>
+        <p class="eyebrow">История измерений датчика</p>
+        <h3>Температура и влажность почвы</h3>
       </div>
 
       <span class="badge badge--soft">{{ sortedHistory.length }} точек</span>
@@ -11,7 +11,7 @@
 
     <EmptyState
       v-if="!sortedHistory.length"
-      title="Истории измерений датчика пока нет"
+      title="Истории измерений пока нет"
       message="За выбранный период измерения от этого датчика не поступали."
     />
 
@@ -36,7 +36,7 @@ import {
 import { Line } from 'vue-chartjs'
 import EmptyState from './EmptyState.vue'
 import { formatDateTime, formatShortDateTime, sortByDateTimeAsc } from '../utils/dates'
-import { formatMetric, metricToNumber } from '../utils/formatMeasurements'
+import { formatMetric, metricToNumber, sensorMetricNames, SENSOR_METRICS } from '../utils/formatMeasurements'
 
 ChartJS.register(
   LineController,
@@ -50,11 +50,14 @@ ChartJS.register(
 
 const props = defineProps({
   history: { type: Array, default: () => [] },
-  sensorId: { type: [Number, String], default: '' },
 })
 
 const sortedHistory = computed(() => sortByDateTimeAsc(props.history))
-const chartTitle = computed(() => props.sensorId ? `Температура и влажность почвы · датчик №${props.sensorId}` : 'Температура и влажность почвы')
+const metricNames = computed(() => {
+  const firstPayloadWithMetrics = sortedHistory.value.find((row) => sensorMetricNames(row?.payload).length)?.payload
+  const names = sensorMetricNames(firstPayloadWithMetrics)
+  return names.length ? names : SENSOR_METRICS
+})
 
 function valuesFor(metricName) {
   return sortedHistory.value.map((row) => {
@@ -63,28 +66,20 @@ function valuesFor(metricName) {
   })
 }
 
+function datasetFor(metricName) {
+  const metric = formatMetric(metricName, null)
+  return {
+    metricName,
+    label: metric.label,
+    data: valuesFor(metricName),
+    tension: 0.35,
+    spanGaps: true,
+  }
+}
+
 const chartData = computed(() => ({
   labels: sortedHistory.value.map((row) => formatShortDateTime(row.date_time)),
-  datasets: [
-    {
-      metricName: 'temperature',
-      label: 'Температура',
-      data: valuesFor('temperature'),
-      borderColor: '#d9465d',
-      backgroundColor: 'rgba(217, 70, 93, 0.12)',
-      tension: 0.35,
-      spanGaps: true,
-    },
-    {
-      metricName: 'soil_moisture',
-      label: 'Влажность почвы',
-      data: valuesFor('soil_moisture'),
-      borderColor: '#2f67d8',
-      backgroundColor: 'rgba(47, 103, 216, 0.12)',
-      tension: 0.35,
-      spanGaps: true,
-    },
-  ],
+  datasets: metricNames.value.map(datasetFor),
 }))
 
 const chartOptions = {
@@ -103,8 +98,7 @@ const chartOptions = {
           const metricName = context.dataset.metricName
           const row = sortedHistory.value[context.dataIndex]
           const metric = formatMetric(metricName, row?.payload?.[metricName])
-          const unit = metric.unit ? ` ${metric.unit}` : ''
-          return `${metric.label}: ${metric.value}${unit} · значение от устройства: ${metric.raw ?? '—'}`
+          return `${metric.label}: ${metric.value}${metric.unit ? ` ${metric.unit}` : ''} · payload: ${metric.raw ?? '—'}`
         },
       },
     },

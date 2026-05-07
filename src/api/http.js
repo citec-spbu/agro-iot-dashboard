@@ -1,19 +1,19 @@
 import axios from 'axios'
 
-export const TOKEN_CHANGED_EVENT = 'agro-iot-token-changed'
-
-const envToken = import.meta.env.VITE_DEV_AUTH_TOKEN || ''
-const defaultBaseURL = import.meta.env.VITE_API_BASE_URL || '/api/iot'
+const defaultBaseURL = import.meta.env.VITE_IOT_API_BASE_URL || '/api/iot'
+const envToken = import.meta.env.VITE_DEV_JWT || ''
 
 let externalAuthorization = ''
 let externalApiBase = ''
+
+export const TOKEN_CHANGED_EVENT = 'agro-iot-token-changed'
 
 function stripTrailingSlash(value) {
   return String(value || '').trim().replace(/\/+$/, '')
 }
 
-function normalizeToken(token) {
-  return String(token || '').replace(/^Bearer\s+/i, '').trim()
+function normalizeToken(value) {
+  return String(value || '').replace(/^Bearer\s+/i, '').trim()
 }
 
 function normalizeAuthorization(value) {
@@ -32,6 +32,14 @@ function buildIotBaseUrl(apiBase) {
   if (normalized.endsWith('/api/iot')) return normalized
   if (normalized.endsWith('/api')) return `${normalized}/iot`
   return `${normalized}/api/iot`
+}
+
+function buildGatewayBaseUrl(apiBase) {
+  const normalized = stripTrailingSlash(apiBase)
+  if (!normalized) return ''
+  if (normalized.endsWith('/api/iot')) return normalized.slice(0, -'/api/iot'.length)
+  if (normalized.endsWith('/api')) return normalized.slice(0, -'/api'.length)
+  return normalized
 }
 
 export function setExternalAuth(payload = {}) {
@@ -55,8 +63,12 @@ export function getExternalAuthorization() {
   return externalAuthorization
 }
 
+export function getActiveAuthorization() {
+  return externalAuthorization || normalizeAuthorization(envToken)
+}
+
 export function hasToken() {
-  return Boolean(externalAuthorization || normalizeAuthorization(envToken))
+  return Boolean(getActiveAuthorization())
 }
 
 export const http = axios.create({
@@ -71,14 +83,9 @@ http.interceptors.request.use((config) => {
   const runtimeBaseURL = buildIotBaseUrl(externalApiBase)
   config.baseURL = runtimeBaseURL
 
-  if (externalAuthorization) {
-    config.headers.Authorization = externalAuthorization
-    return config
-  }
-
-  const devAuthorization = normalizeAuthorization(envToken)
-  if (devAuthorization) {
-    config.headers.Authorization = devAuthorization
+  const authorization = getActiveAuthorization()
+  if (authorization) {
+    config.headers.Authorization = authorization
   }
 
   return config
@@ -186,4 +193,8 @@ export function getErrorMessage(error) {
 
 export function getApiBaseUrl() {
   return buildIotBaseUrl(externalApiBase)
+}
+
+export function getGatewayBaseUrl() {
+  return buildGatewayBaseUrl(externalApiBase || defaultBaseURL)
 }

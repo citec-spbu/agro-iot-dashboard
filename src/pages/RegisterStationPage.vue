@@ -4,6 +4,7 @@
       <div>
         <p class="eyebrow">Добавить станцию</p>
         <h2>Регистрация метеостанции</h2>
+        <p class="muted">Для регистрации нужен UUID поля. Его можно выбрать из списка полей ниже или вставить вручную.</p>
       </div>
     </div>
 
@@ -11,6 +12,45 @@
       <strong>Ожидание авторизации от основного Smart.Agromelio.</strong>
       <span>Форма доступна для заполнения, но регистрация включится после получения сессии.</span>
     </div>
+
+    <article class="card field-directory-card">
+      <div class="card-header">
+        <div>
+          <p class="eyebrow">Поля Smart.Agromelio</p>
+          <h3>ID полей для регистрации станции</h3>
+          <p class="muted">Выберите поле из списка, чтобы автоматически подставить его UUID в форму.</p>
+        </div>
+        <button class="btn btn--ghost" type="button" :disabled="fieldsLoading || !tokenReady" @click="loadFields">
+          {{ fieldsLoading ? 'Загружаем…' : 'Обновить список' }}
+        </button>
+      </div>
+
+      <div v-if="fieldsError" class="banner banner--warning field-directory-card__warning">
+        <strong>Список полей не загрузился.</strong>
+        <span>{{ fieldsError }}</span>
+      </div>
+
+      <div v-if="fieldsLoading" class="hint">Загружаем поля из fields-service…</div>
+
+      <div v-else-if="fields.length" class="field-directory">
+        <div class="field-directory__head">
+          <span>Сезон</span>
+          <span>Поле</span>
+          <span>ID поля</span>
+          <span></span>
+        </div>
+        <div v-for="field in fields" :key="`${field.season_id || 'season'}-${field.field_id}`" class="field-directory__row">
+          <span>{{ field.season_name || '—' }}</span>
+          <strong>{{ field.field_name || 'Без названия' }}</strong>
+          <code>{{ field.field_id }}</code>
+          <button class="btn btn--primary btn--small" type="button" @click="selectField(field.field_id)">Вставить</button>
+        </div>
+      </div>
+
+      <p v-else class="muted field-directory-card__empty">
+        Поля пока не найдены. Если они есть на карте, нажмите “Обновить список” после получения авторизации.
+      </p>
+    </article>
 
     <form class="card form-card" @submit.prevent="submit">
       <div class="form-grid">
@@ -83,6 +123,7 @@
 <script setup>
 import { computed, onMounted, onUnmounted, reactive, ref } from 'vue'
 import ErrorState from '../components/ErrorState.vue'
+import { listFieldDirectory } from '../api/fieldsApi'
 import { registerStation } from '../api/iotApi'
 import { getErrorMessage, hasToken, TOKEN_CHANGED_EVENT } from '../api/http'
 import { normalizeCreatedStation } from '../utils/summary'
@@ -94,6 +135,9 @@ const error = ref('')
 const created = ref(null)
 const validationError = ref('')
 const tokenReady = ref(hasToken())
+const fieldsLoading = ref(false)
+const fieldsError = ref('')
+const fields = ref([])
 
 const form = reactive({
   field_id: '',
@@ -134,6 +178,27 @@ function buildPayload() {
   }
 }
 
+async function loadFields() {
+  tokenReady.value = hasToken()
+  if (!tokenReady.value) return
+
+  fieldsLoading.value = true
+  fieldsError.value = ''
+  try {
+    fields.value = await listFieldDirectory()
+  } catch (err) {
+    fields.value = []
+    fieldsError.value = getErrorMessage(err)
+  } finally {
+    fieldsLoading.value = false
+  }
+}
+
+function selectField(fieldId) {
+  form.field_id = String(fieldId || '')
+  validationError.value = ''
+}
+
 async function submit() {
   tokenReady.value = hasToken()
   if (!tokenReady.value) {
@@ -157,12 +222,16 @@ async function submit() {
 }
 
 function onTokenChanged() {
-  tokenReady.value = hasToken()
+  const nextTokenReady = hasToken()
+  const shouldLoadFields = nextTokenReady && !tokenReady.value && !fields.value.length
+  tokenReady.value = nextTokenReady
+  if (shouldLoadFields) loadFields()
 }
 
 onMounted(() => {
   window.addEventListener(TOKEN_CHANGED_EVENT, onTokenChanged)
   tokenReady.value = hasToken()
+  if (tokenReady.value) loadFields()
 })
 
 onUnmounted(() => {

@@ -32,6 +32,7 @@
         </div>
 
         <div class="station-hero__meta">
+          <div><span>ID поля</span><code>{{ station?.field_id || fieldId }}</code></div>
           <div><span>ID метеостанции</span><strong>{{ station?.hardware_id ?? '—' }}</strong></div>
           <div><span>Последняя активность</span><strong>{{ formatDateTime(station?.last_seen_at) }}</strong></div>
           <div><span>Широта</span><strong>{{ station?.latitude ?? '—' }}</strong></div>
@@ -80,25 +81,6 @@
           <SensorCard v-for="sensor in sensors" :key="sensor.sensor_id" :sensor="sensor" />
         </div>
       </section>
-
-      <section v-if="sensors.length" class="section-block">
-        <div class="section-title">
-          <div>
-            <p class="eyebrow">История почвенных датчиков</p>
-            <h3>Температура и влажность почвы по времени</h3>
-          </div>
-          <span class="badge badge--soft">{{ sensors.length }} граф.</span>
-        </div>
-
-        <div class="sensor-chart-grid">
-          <SensorHistoryChart
-            v-for="sensor in sensors"
-            :key="`sensor-chart-${sensor.sensor_id}`"
-            :sensor-id="sensor.sensor_id"
-            :history="sensor.history"
-          />
-        </div>
-      </section>
     </template>
   </section>
 </template>
@@ -112,7 +94,6 @@ import LoadingState from '../components/LoadingState.vue'
 import MetricCard from '../components/MetricCard.vue'
 import PeriodSelector from '../components/PeriodSelector.vue'
 import SensorCard from '../components/SensorCard.vue'
-import SensorHistoryChart from '../components/SensorHistoryChart.vue'
 import StationHistoryChart from '../components/StationHistoryChart.vue'
 import SummaryCard from '../components/SummaryCard.vue'
 import {
@@ -127,7 +108,7 @@ import {
 } from '../api/iotApi'
 import { getErrorMessage, hasToken, TOKEN_CHANGED_EVENT } from '../api/http'
 import { formatDateTime } from '../utils/dates'
-import { formatMetric } from '../utils/formatMeasurements'
+import { formatMetric, STATION_METRICS } from '../utils/formatMeasurements'
 import {
   getStationName,
   isNotFoundError,
@@ -155,7 +136,7 @@ const stationTitle = computed(() => getStationName(station.value))
 const online = computed(() => Boolean(station.value?.online) || isRecentIsoDate(station.value?.last_seen_at))
 const stationMetrics = computed(() => {
   const payload = stationLast.value?.payload || {}
-  return ['wind_speed', 'wind_direction', 'rain'].map((name) => formatMetric(name, payload?.[name]))
+  return STATION_METRICS.map((name) => formatMetric(name, payload?.[name]))
 })
 
 async function onPeriodChange(nextPeriod) {
