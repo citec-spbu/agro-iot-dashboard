@@ -14,13 +14,21 @@
     </div>
 
     <article class="card field-directory-card">
-      <div class="card-header">
+      <div class="field-directory-card__header">
         <div>
           <p class="eyebrow">Поля Smart.Agromelio</p>
           <h3>ID полей для регистрации станции</h3>
-          <p class="muted">Выберите поле из списка, чтобы автоматически подставить его UUID в форму.</p>
+          <p class="muted">
+            Выберите поле из списка, чтобы автоматически подставить его UUID в форму.
+          </p>
         </div>
-        <button class="btn btn--ghost" type="button" :disabled="fieldsLoading || !tokenReady" @click="loadFields">
+
+        <button
+          class="btn btn--ghost field-directory-card__refresh"
+          type="button"
+          :disabled="fieldsLoading || !tokenReady"
+          @click="loadFields"
+        >
           {{ fieldsLoading ? 'Загружаем…' : 'Обновить список' }}
         </button>
       </div>
@@ -30,7 +38,9 @@
         <span>{{ fieldsError }}</span>
       </div>
 
-      <div v-if="fieldsLoading" class="hint">Загружаем поля из fields-service…</div>
+      <div v-if="fieldsLoading" class="hint">
+        Загружаем поля из fields-service…
+      </div>
 
       <div v-else-if="fields.length" class="field-directory">
         <div class="field-directory__head">
@@ -39,11 +49,31 @@
           <span>ID поля</span>
           <span></span>
         </div>
-        <div v-for="field in fields" :key="`${field.season_id || 'season'}-${field.field_id}`" class="field-directory__row">
-          <span>{{ field.season_name || '—' }}</span>
-          <strong>{{ field.field_name || 'Без названия' }}</strong>
-          <code>{{ field.field_id }}</code>
-          <button class="btn btn--primary btn--small" type="button" @click="selectField(field.field_id)">Вставить</button>
+
+        <div
+          v-for="field in fields"
+          :key="`${field.season_id || 'season'}-${field.field_id}`"
+          class="field-directory__row"
+        >
+          <span class="field-directory__season">
+            {{ field.season_name || '—' }}
+          </span>
+
+          <strong class="field-directory__name">
+            {{ field.field_name || 'Без названия' }}
+          </strong>
+
+          <code class="field-directory__id">
+            {{ field.field_id }}
+          </code>
+
+          <button
+            class="btn btn--primary btn--small field-directory__button"
+            type="button"
+            @click="selectField(field.field_id)"
+          >
+            Вставить
+          </button>
         </div>
       </div>
 
