@@ -849,3 +849,119 @@ html.host-dark .summary-table__row {
     grid-template-columns: 1fr;
   }
 }
+.field-picker-card {
+  display: grid;
+  gap: 16px;
+}
+
+.field-picker-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 18px;
+}
+
+.field-picker-header h3 {
+  margin: 0;
+  color: var(--color-text);
+  font-size: 20px;
+  line-height: 1.25;
+}
+
+.field-picker-header .muted {
+  margin: 10px 0 0;
+}
+
+.field-picker-refresh {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+.field-picker-list {
+  display: grid;
+  gap: 10px;
+  width: 100%;
+  overflow: hidden;
+}
+
+.field-picker-row {
+  display: grid;
+  grid-template-columns:
+    minmax(90px, 0.75fr)
+    minmax(130px, 1fr)
+    minmax(260px, 1.5fr)
+    auto;
+  align-items: center;
+  gap: 10px 14px;
+  width: 100%;
+  min-width: 0;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.field-picker-row:last-child {
+  border-bottom: 0;
+}
+
+.field-picker-season,
+.field-picker-name,
+.field-picker-id {
+  min-width: 0;
+}
+
+.field-picker-season {
+  color: var(--color-text);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.field-picker-name {
+  color: var(--color-text);
+  font-size: 14px;
+  font-weight: 800;
+  overflow-wrap: anywhere;
+}
+
+.field-picker-id {
+  display: block;
+  width: 100%;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  white-space: normal;
+}
+
+.field-picker-insert {
+  justify-self: end;
+  min-width: 106px;
+  white-space: nowrap;
+}
+
+.field-picker-state {
+  border-radius: 12px;
+  background: #f8fafe;
+  padding: 14px 16px;
+}
+
+html.host-dark .field-picker-state {
+  background: #172235;
+}
+
+@media (max-width: 900px) {
+  .field-picker-header {
+    flex-direction: column;
+  }
+
+  .field-picker-refresh {
+    width: 100%;
+  }
+
+  .field-picker-row {
+    grid-template-columns: 1fr;
+    padding: 14px 0;
+  }
+
+  .field-picker-insert {
+    justify-self: stretch;
+    width: 100%;
+  }
+}
