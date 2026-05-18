@@ -884,6 +884,20 @@ html.host-dark .summary-table__row {
   overflow: hidden;
 }
 
+.field-directory__head {
+  display: grid;
+  grid-template-columns:
+    minmax(90px, 0.75fr)
+    minmax(130px, 1fr)
+    minmax(260px, 1.5fr)
+    auto;
+  gap: 10px 14px;
+  align-items: center;
+  color: var(--color-muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+
 .field-directory__row {
   display: grid;
   grid-template-columns:
