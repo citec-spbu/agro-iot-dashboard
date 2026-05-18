@@ -62,16 +62,18 @@ http://localhost:9002
 Пример `.env`:
 
 ```env
-VITE_API_BASE_URL=/api/iot
-# VITE_DEV_AUTH_TOKEN=
+VITE_IOT_API_BASE_URL=/api/iot
+# VITE_DEV_JWT=
 # VITE_ALLOWED_PARENT_ORIGINS=http://localhost:9000,http://localhost:8080
+VITE_BASE_PATH=/
 ```
 
 Назначение переменных:
 
-- `VITE_API_BASE_URL` — базовый путь к IoT API;
-- `VITE_DEV_AUTH_TOKEN` — необязательный dev-only токен для standalone-запуска;
+- `VITE_IOT_API_BASE_URL` — базовый путь к IoT API;
+- `VITE_DEV_JWT` — необязательный dev-only токен для standalone-запуска;
 - `VITE_ALLOWED_PARENT_ORIGINS` — список разрешённых origin для получения авторизации через `postMessage`.
+- `VITE_BASE_PATH` — путь, под которым dashboard публикуется наружу (`/` локально, `/iot-dashboard/` в prod при same-origin размещении).
 
 ## Что отображает микросервис
 

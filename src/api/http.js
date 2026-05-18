@@ -1,7 +1,8 @@
 import axios from 'axios'
 
-const defaultBaseURL = import.meta.env.VITE_IOT_API_BASE_URL || '/api/iot'
-const envToken = import.meta.env.VITE_DEV_JWT || ''
+const defaultBaseURL =
+  import.meta.env.VITE_IOT_API_BASE_URL || import.meta.env.VITE_API_BASE_URL || '/api/iot'
+const envToken = import.meta.env.VITE_DEV_JWT || import.meta.env.VITE_DEV_AUTH_TOKEN || ''
 
 let externalAuthorization = ''
 let externalApiBase = ''
