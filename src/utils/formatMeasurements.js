@@ -24,14 +24,14 @@ const METRIC_UNITS = {
 
 const METRIC_DIGITS = {
   temperature: 1,
-  soil_moisture: 0,
+  soil_moisture: 1,
   wind_speed: 1,
-  wind_direction: 0,
+  wind_direction: 1,
   rain: 1,
-  temperaturea: 0,
-  soil_moisturea: 0,
-  temperaturez: 0,
-  soil_moisturez: 0,
+  temperaturea: 1,
+  soil_moisturea: 1,
+  temperaturez: 1,
+  soil_moisturez: 1,
 }
 
 export const STATION_METRICS = ['temperature', 'soil_moisture', 'wind_speed', 'wind_direction', 'rain']
