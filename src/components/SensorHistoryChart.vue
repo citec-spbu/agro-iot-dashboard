@@ -53,11 +53,38 @@ const props = defineProps({
 })
 
 const sortedHistory = computed(() => sortByDateTimeAsc(props.history))
+
+const SENSOR_CHART_COLORS = {
+  temperaturea: '#e05252',
+  soil_moisturea: '#2f67d8',
+  temperaturez: '#d97706',
+  soil_moisturez: '#20b86a',
+
+  temperature: '#e05252',
+  soil_moisture: '#2f67d8',
+}
+
+const FALLBACK_COLORS = ['#e05252', '#2f67d8', '#d97706', '#20b86a']
+
 const metricNames = computed(() => {
   const firstPayloadWithMetrics = sortedHistory.value.find((row) => sensorMetricNames(row?.payload).length)?.payload
   const names = sensorMetricNames(firstPayloadWithMetrics)
   return names.length ? names : SENSOR_METRICS
 })
+
+function colorFor(metricName, index = 0) {
+  return SENSOR_CHART_COLORS[metricName] || FALLBACK_COLORS[index % FALLBACK_COLORS.length]
+}
+
+function hexToRgba(hex, alpha = 0.14) {
+  const normalized = hex.replace('#', '')
+  const bigint = parseInt(normalized, 16)
+  const r = (bigint >> 16) & 255
+  const g = (bigint >> 8) & 255
+  const b = bigint & 255
+
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`
+}
 
 function valuesFor(metricName) {
   return sortedHistory.value.map((row) => {
@@ -66,14 +93,26 @@ function valuesFor(metricName) {
   })
 }
 
-function datasetFor(metricName) {
+function datasetFor(metricName, index) {
   const metric = formatMetric(metricName, null)
+  const color = colorFor(metricName, index)
+
   return {
     metricName,
     label: metric.label,
     data: valuesFor(metricName),
     tension: 0.35,
     spanGaps: true,
+    borderColor: color,
+    backgroundColor: hexToRgba(color, 0.14),
+    pointBackgroundColor: color,
+    pointBorderColor: '#ffffff',
+    pointHoverBackgroundColor: color,
+    pointHoverBorderColor: '#ffffff',
+    borderWidth: 2,
+    pointRadius: 4,
+    pointHoverRadius: 6,
+    pointBorderWidth: 2,
   }
 }
 
@@ -87,7 +126,15 @@ const chartOptions = {
   maintainAspectRatio: false,
   interaction: { intersect: false, mode: 'index' },
   plugins: {
-    legend: { position: 'bottom' },
+    legend: {
+      position: 'bottom',
+      labels: {
+        usePointStyle: true,
+        boxWidth: 10,
+        boxHeight: 10,
+        padding: 16,
+      },
+    },
     tooltip: {
       callbacks: {
         title(items) {
@@ -104,8 +151,22 @@ const chartOptions = {
     },
   },
   scales: {
-    x: { ticks: { maxRotation: 0, autoSkip: true, maxTicksLimit: 8 } },
-    y: { beginAtZero: false },
+    x: {
+      ticks: {
+        maxRotation: 0,
+        autoSkip: true,
+        maxTicksLimit: 8,
+      },
+      grid: {
+        color: 'rgba(110, 123, 145, 0.18)',
+      },
+    },
+    y: {
+      beginAtZero: false,
+      grid: {
+        color: 'rgba(110, 123, 145, 0.18)',
+      },
+    },
   },
 }
 </script>
