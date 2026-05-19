@@ -16,9 +16,9 @@ const METRIC_UNITS = {
   wind_speed: 'км/ч',
   wind_direction: '°',
   rain: 'мм',
-  temperaturea: '',
+  temperaturea: '°F',
   soil_moisturea: '%',
-  temperaturez: '',
+  temperaturez: '°F',
   soil_moisturez: '%',
 }
 
