@@ -352,7 +352,7 @@ html.host-dark .module-tab {
 
 .station-hero__meta,
 .created-station {
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(6, minmax(0, 1fr));
   margin-top: 18px;
 }
 
@@ -649,6 +649,29 @@ html.host-dark .input {
 
 html.host-dark .hint {
   background: #172235;
+}
+
+.form-hint {
+  color: var(--color-muted);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.45;
+}
+
+.polling-card {
+  display: grid;
+  gap: 16px;
+}
+
+.polling-card__controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 14px;
+}
+
+.polling-card__input {
+  width: min(320px, 100%);
 }
 
 .period-selector {

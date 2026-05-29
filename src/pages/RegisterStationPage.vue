@@ -4,13 +4,18 @@
       <div>
         <p class="eyebrow">Добавить станцию</p>
         <h2>Регистрация метеостанции</h2>
-        <p class="muted">Для регистрации нужен UUID поля. Его можно выбрать из списка полей ниже или вставить вручную.</p>
+        <p class="muted">
+          Для регистрации нужен UUID поля. Его можно выбрать из списка полей ниже
+          или вставить вручную.
+        </p>
       </div>
     </div>
 
     <div v-if="!tokenReady" class="banner banner--warning">
       <strong>Ожидание авторизации от основного Smart.Agromelio.</strong>
-      <span>Форма доступна для заполнения, но регистрация включится после получения сессии.</span>
+      <span>
+        Форма доступна для заполнения, но регистрация включится после получения сессии.
+      </span>
     </div>
 
     <article class="card field-directory-card">
@@ -33,13 +38,16 @@
         </button>
       </div>
 
-      <div v-if="fieldsError" class="banner banner--warning field-directory-card__warning">
+      <div
+        v-if="fieldsError"
+        class="banner banner--warning field-directory-card__warning"
+      >
         <strong>Список полей не загрузился.</strong>
         <span>{{ fieldsError }}</span>
       </div>
 
       <div v-if="fieldsLoading" class="hint">
-        Загружаем поля из fields-service…
+        Загружаем поля…
       </div>
 
       <div v-else-if="fields.length" class="field-directory">
@@ -78,7 +86,8 @@
       </div>
 
       <p v-else class="muted field-directory-card__empty">
-        Поля пока не найдены. Если они есть на карте, нажмите “Обновить список” после получения авторизации.
+        Поля пока не найдены. Если они есть на карте, нажмите «Обновить список»
+        после получения авторизации.
       </p>
     </article>
 
@@ -97,22 +106,63 @@
 
         <label class="form-label">
           ID метеостанции *
-          <input v-model.number="form.hardware_id" class="input" type="number" min="1" required placeholder="Например: 1001" />
+          <input
+            v-model.number="form.hardware_id"
+            class="input"
+            type="number"
+            min="1"
+            required
+            placeholder="Например: 1001"
+          />
         </label>
 
         <label class="form-label form-grid__wide">
           Название станции
-          <input v-model.trim="form.name" class="input" type="text" placeholder="Например: Метеостанция 1" />
+          <input
+            v-model.trim="form.name"
+            class="input"
+            type="text"
+            placeholder="Например: Метеостанция 1"
+          />
+        </label>
+
+        <label class="form-label form-grid__wide">
+          Интервал опроса датчиков станцией, мин. *
+          <input
+            v-model.number="form.polling_interval_minutes"
+            class="input"
+            type="number"
+            min="0.01"
+            step="0.01"
+            required
+            placeholder="Например: 5"
+          />
         </label>
 
         <label class="form-label">
           Широта
-          <input v-model.number="form.latitude" class="input" type="number" min="-90" max="90" step="0.000001" placeholder="Например: 59.9391" />
+          <input
+            v-model.number="form.latitude"
+            class="input"
+            type="number"
+            min="-90"
+            max="90"
+            step="0.000001"
+            placeholder="Например: 59.9391"
+          />
         </label>
 
         <label class="form-label">
           Долгота
-          <input v-model.number="form.longitude" class="input" type="number" min="-180" max="180" step="0.000001" placeholder="Например: 30.3158" />
+          <input
+            v-model.number="form.longitude"
+            class="input"
+            type="number"
+            min="-180"
+            max="180"
+            step="0.000001"
+            placeholder="Например: 30.3158"
+          />
         </label>
       </div>
 
@@ -122,14 +172,25 @@
       </div>
 
       <div class="actions">
-        <button class="btn btn--primary" type="submit" :disabled="submitting || !tokenReady">
+        <button
+          class="btn btn--primary"
+          type="submit"
+          :disabled="submitting || !tokenReady"
+        >
           {{ submitting ? 'Регистрируем…' : 'Зарегистрировать' }}
         </button>
-        <button class="btn btn--ghost" type="button" @click="resetForm">Очистить</button>
+
+        <button class="btn btn--ghost" type="button" @click="resetForm">
+          Очистить
+        </button>
       </div>
     </form>
 
-    <ErrorState v-if="error" title="Регистрация не выполнена" :message="error" />
+    <ErrorState
+      v-if="error"
+      title="Регистрация не выполнена"
+      :message="error"
+    />
 
     <article v-if="createdStation" class="card success-card">
       <div class="banner banner--success">
@@ -138,14 +199,45 @@
       </div>
 
       <div class="created-station">
-        <div><span>ID поля</span><code>{{ createdStation?.field_id }}</code></div>
-        <div><span>ID метеостанции</span><strong>{{ createdStation?.hardware_id }}</strong></div>
-        <div><span>Название</span><strong>{{ createdStation?.name || '—' }}</strong></div>
-        <div><span>Широта</span><strong>{{ createdStation?.latitude ?? '—' }}</strong></div>
-        <div><span>Долгота</span><strong>{{ createdStation?.longitude ?? '—' }}</strong></div>
+        <div>
+          <span>ID поля</span>
+          <code>{{ createdStation?.field_id }}</code>
+        </div>
+
+        <div>
+          <span>ID метеостанции</span>
+          <strong>{{ createdStation?.hardware_id }}</strong>
+        </div>
+
+        <div>
+          <span>Название</span>
+          <strong>{{ createdStation?.name || '—' }}</strong>
+        </div>
+
+        <div>
+          <span>Широта</span>
+          <strong>{{ createdStation?.latitude ?? '—' }}</strong>
+        </div>
+
+        <div>
+          <span>Долгота</span>
+          <strong>{{ createdStation?.longitude ?? '—' }}</strong>
+        </div>
+
+        <div>
+          <span>Интервал опроса</span>
+          <strong>
+            {{ formatPollingIntervalSeconds(createdStation?.polling_interval_seconds) }}
+          </strong>
+        </div>
       </div>
 
-      <RouterLink :to="`/stations/${createdStation?.field_id}`" class="btn btn--primary">Открыть станцию</RouterLink>
+      <RouterLink
+        :to="`/stations/${createdStation?.field_id}`"
+        class="btn btn--primary"
+      >
+        Открыть станцию
+      </RouterLink>
     </article>
   </section>
 </template>
@@ -157,6 +249,10 @@ import { listFieldDirectory } from '../api/fieldsApi'
 import { registerStation } from '../api/iotApi'
 import { getErrorMessage, hasToken, TOKEN_CHANGED_EVENT } from '../api/http'
 import { normalizeCreatedStation } from '../utils/summary'
+import {
+  formatPollingIntervalSeconds,
+  minutesToPollingIntervalSeconds,
+} from '../utils/pollingInterval'
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 
@@ -165,6 +261,7 @@ const error = ref('')
 const created = ref(null)
 const validationError = ref('')
 const tokenReady = ref(hasToken())
+
 const fieldsLoading = ref(false)
 const fieldsError = ref('')
 const fields = ref([])
@@ -175,22 +272,54 @@ const form = reactive({
   name: '',
   latitude: null,
   longitude: null,
+  polling_interval_minutes: null,
 })
 
 const createdStation = computed(() => normalizeCreatedStation(created.value).station)
 
 const coordsMessage = computed(() => {
   const coords = normalizeCreatedStation(created.value).coords_match_field
-  if (coords === true) return 'Координаты станции находятся внутри выбранного поля.'
-  if (coords === false) return 'Координаты станции находятся вне контура выбранного поля.'
+
+  if (coords === true) {
+    return 'Координаты станции находятся внутри выбранного поля.'
+  }
+
+  if (coords === false) {
+    return 'Координаты станции находятся вне контура выбранного поля.'
+  }
+
   return 'Не удалось проверить, попадает ли станция в контур поля.'
 })
 
 function validateForm() {
-  if (!UUID_RE.test(form.field_id)) return 'Укажите корректный UUID поля из Smart.Agromelio.'
-  if (!Number.isInteger(Number(form.hardware_id)) || Number(form.hardware_id) <= 0) return 'ID метеостанции должен быть положительным целым числом.'
-  if (form.latitude !== null && form.latitude !== '' && !isInRange(Number(form.latitude), -90, 90)) return 'Широта должна быть числом от -90 до 90.'
-  if (form.longitude !== null && form.longitude !== '' && !isInRange(Number(form.longitude), -180, 180)) return 'Долгота должна быть числом от -180 до 180.'
+  if (!UUID_RE.test(form.field_id)) {
+    return 'Укажите корректный UUID поля из Smart.Agromelio.'
+  }
+
+  if (!Number.isInteger(Number(form.hardware_id)) || Number(form.hardware_id) <= 0) {
+    return 'ID метеостанции должен быть положительным целым числом.'
+  }
+
+  if (minutesToPollingIntervalSeconds(form.polling_interval_minutes) === null) {
+    return 'Укажите положительный интервал опроса в минутах.'
+  }
+
+  if (
+    form.latitude !== null &&
+    form.latitude !== '' &&
+    !isInRange(Number(form.latitude), -90, 90)
+  ) {
+    return 'Широта должна быть числом от -90 до 90.'
+  }
+
+  if (
+    form.longitude !== null &&
+    form.longitude !== '' &&
+    !isInRange(Number(form.longitude), -180, 180)
+  ) {
+    return 'Долгота должна быть числом от -180 до 180.'
+  }
+
   return ''
 }
 
@@ -203,17 +332,26 @@ function buildPayload() {
     field_id: form.field_id,
     hardware_id: Number(form.hardware_id),
     name: form.name || null,
-    latitude: form.latitude === '' || form.latitude === null ? null : Number(form.latitude),
-    longitude: form.longitude === '' || form.longitude === null ? null : Number(form.longitude),
+    latitude: form.latitude === '' || form.latitude === null
+      ? null
+      : Number(form.latitude),
+    longitude: form.longitude === '' || form.longitude === null
+      ? null
+      : Number(form.longitude),
+    polling_interval_seconds: minutesToPollingIntervalSeconds(
+      form.polling_interval_minutes,
+    ),
   }
 }
 
 async function loadFields() {
   tokenReady.value = hasToken()
+
   if (!tokenReady.value) return
 
   fieldsLoading.value = true
   fieldsError.value = ''
+
   try {
     fields.value = await listFieldDirectory()
   } catch (err) {
@@ -231,17 +369,20 @@ function selectField(fieldId) {
 
 async function submit() {
   tokenReady.value = hasToken()
+
   if (!tokenReady.value) {
     error.value = 'Авторизация ещё не получена. Откройте модуль через основной Smart.Agromelio или войдите заново.'
     return
   }
 
   validationError.value = validateForm()
+
   if (validationError.value) return
 
   submitting.value = true
   error.value = ''
   created.value = null
+
   try {
     created.value = await registerStation(buildPayload())
   } catch (err) {
@@ -254,14 +395,21 @@ async function submit() {
 function onTokenChanged() {
   const nextTokenReady = hasToken()
   const shouldLoadFields = nextTokenReady && !tokenReady.value && !fields.value.length
+
   tokenReady.value = nextTokenReady
-  if (shouldLoadFields) loadFields()
+
+  if (shouldLoadFields) {
+    loadFields()
+  }
 }
 
 onMounted(() => {
   window.addEventListener(TOKEN_CHANGED_EVENT, onTokenChanged)
   tokenReady.value = hasToken()
-  if (tokenReady.value) loadFields()
+
+  if (tokenReady.value) {
+    loadFields()
+  }
 })
 
 onUnmounted(() => {
@@ -274,6 +422,8 @@ function resetForm() {
   form.name = ''
   form.latitude = null
   form.longitude = null
+  form.polling_interval_minutes = null
+
   validationError.value = ''
   error.value = ''
   created.value = null
