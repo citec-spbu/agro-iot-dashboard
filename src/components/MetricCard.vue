@@ -8,11 +8,6 @@
       <strong>{{ preparedMetric.value ?? value ?? '—' }}</strong>
       <span v-if="preparedMetric.unit || unit">{{ preparedMetric.unit || unit }}</span>
     </div>
-    <p class="metric-card__raw" v-if="showRaw && preparedMetric.raw !== undefined && preparedMetric.raw !== null">
-      значение от устройства: <code>{{ preparedMetric.raw }}</code>
-      <span v-if="preparedMetric.isConverted"> · обработано</span>
-      <span v-else> · без обработки</span>
-    </p>
   </article>
 </template>
 

@@ -137,7 +137,7 @@ const chartOptions = {
           const metricName = context.dataset.metricName
           const row = sortedHistory.value[context.dataIndex]
           const metric = formatMetric(metricName, row?.payload?.[metricName])
-          return `${metric.label}: ${metric.value}${metric.unit ? ` ${metric.unit}` : ''} · payload: ${metric.raw ?? '—'}`
+          return `${metric.label}: ${metric.value}${metric.unit ? ` ${metric.unit}` : ''}`
         },
       },
     },
