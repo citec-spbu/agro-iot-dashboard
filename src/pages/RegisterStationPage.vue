@@ -135,7 +135,7 @@
             min="0.01"
             step="0.01"
             required
-            placeholder="Например: 5"
+            placeholder="Например: 0.5"
           />
         </label>
 
@@ -226,9 +226,7 @@
 
         <div>
           <span>Интервал опроса</span>
-          <strong>
-            {{ formatPollingIntervalSeconds(createdStation?.polling_interval_seconds) }}
-          </strong>
+          <strong>{{ formatPollingInterval(createdStation?.polling_interval) }}</strong>
         </div>
       </div>
 
@@ -250,11 +248,12 @@ import { registerStation } from '../api/iotApi'
 import { getErrorMessage, hasToken, TOKEN_CHANGED_EVENT } from '../api/http'
 import { normalizeCreatedStation } from '../utils/summary'
 import {
-  formatPollingIntervalSeconds,
-  minutesToPollingIntervalSeconds,
+  formatPollingInterval,
+  normalizePollingIntervalMinutes,
 } from '../utils/pollingInterval'
 
-const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+const UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 
 const submitting = ref(false)
 const error = ref('')
@@ -272,7 +271,7 @@ const form = reactive({
   name: '',
   latitude: null,
   longitude: null,
-  polling_interval_minutes: null,
+  polling_interval_minutes: 0.5,
 })
 
 const createdStation = computed(() => normalizeCreatedStation(created.value).station)
@@ -300,7 +299,7 @@ function validateForm() {
     return 'ID метеостанции должен быть положительным целым числом.'
   }
 
-  if (minutesToPollingIntervalSeconds(form.polling_interval_minutes) === null) {
+  if (normalizePollingIntervalMinutes(form.polling_interval_minutes) === null) {
     return 'Укажите положительный интервал опроса в минутах.'
   }
 
@@ -332,13 +331,15 @@ function buildPayload() {
     field_id: form.field_id,
     hardware_id: Number(form.hardware_id),
     name: form.name || null,
-    latitude: form.latitude === '' || form.latitude === null
-      ? null
-      : Number(form.latitude),
-    longitude: form.longitude === '' || form.longitude === null
-      ? null
-      : Number(form.longitude),
-    polling_interval_seconds: minutesToPollingIntervalSeconds(
+    latitude:
+      form.latitude === '' || form.latitude === null
+        ? null
+        : Number(form.latitude),
+    longitude:
+      form.longitude === '' || form.longitude === null
+        ? null
+        : Number(form.longitude),
+    polling_interval: normalizePollingIntervalMinutes(
       form.polling_interval_minutes,
     ),
   }
@@ -371,7 +372,8 @@ async function submit() {
   tokenReady.value = hasToken()
 
   if (!tokenReady.value) {
-    error.value = 'Авторизация ещё не получена. Откройте модуль через основной Smart.Agromelio или войдите заново.'
+    error.value =
+      'Авторизация ещё не получена. Откройте модуль через основной Smart.Agromelio или войдите заново.'
     return
   }
 
@@ -394,7 +396,8 @@ async function submit() {
 
 function onTokenChanged() {
   const nextTokenReady = hasToken()
-  const shouldLoadFields = nextTokenReady && !tokenReady.value && !fields.value.length
+  const shouldLoadFields =
+    nextTokenReady && !tokenReady.value && !fields.value.length
 
   tokenReady.value = nextTokenReady
 
@@ -422,7 +425,7 @@ function resetForm() {
   form.name = ''
   form.latitude = null
   form.longitude = null
-  form.polling_interval_minutes = null
+  form.polling_interval_minutes = 0.5
 
   validationError.value = ''
   error.value = ''

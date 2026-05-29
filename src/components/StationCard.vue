@@ -29,7 +29,7 @@
 
       <div>
         <dt>Интервал опроса</dt>
-        <dd>{{ formatPollingIntervalSeconds(station?.polling_interval_seconds) }}</dd>
+        <dd>{{ formatPollingInterval(station?.polling_interval) }}</dd>
       </div>
     </dl>
 
@@ -85,9 +85,13 @@
 import { computed } from 'vue'
 import MetricCard from './MetricCard.vue'
 import { formatDateTime } from '../utils/dates'
-import { formatMetric, sensorMetricNames, STATION_METRICS } from '../utils/formatMeasurements'
+import {
+  formatMetric,
+  sensorMetricNames,
+  STATION_METRICS,
+} from '../utils/formatMeasurements'
 import { getStationName, safeArray } from '../utils/summary'
-import { formatPollingIntervalSeconds } from '../utils/pollingInterval'
+import { formatPollingInterval } from '../utils/pollingInterval'
 
 const props = defineProps({
   item: {

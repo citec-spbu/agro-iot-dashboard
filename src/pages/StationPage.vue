@@ -77,9 +77,7 @@
 
           <div>
             <span>Интервал опроса</span>
-            <strong>
-              {{ formatPollingIntervalSeconds(station?.polling_interval_seconds) }}
-            </strong>
+            <strong>{{ formatPollingInterval(station?.polling_interval) }}</strong>
           </div>
         </div>
       </article>
@@ -105,13 +103,8 @@
               min="0.01"
               step="0.01"
               required
-              placeholder="Например: 5"
+              placeholder="Например: 0.5"
             />
-
-            <small class="form-hint">
-              В API отправляется значение в секундах как
-              <code>polling_interval_seconds</code>.
-            </small>
           </label>
 
           <button
@@ -230,9 +223,8 @@ import { getErrorMessage, hasToken, TOKEN_CHANGED_EVENT } from '../api/http'
 import { formatDateTime } from '../utils/dates'
 import { formatMetric, STATION_METRICS } from '../utils/formatMeasurements'
 import {
-  formatPollingIntervalSeconds,
-  minutesToPollingIntervalSeconds,
-  pollingIntervalSecondsToMinutes,
+  formatPollingInterval,
+  normalizePollingIntervalMinutes,
 } from '../utils/pollingInterval'
 import {
   getStationName,
@@ -331,21 +323,17 @@ async function loadStation() {
 
     station.value = normalizeStationResponse(stationResult.value)
 
-    pollingIntervalMinutes.value = pollingIntervalSecondsToMinutes(
-      station.value?.polling_interval_seconds,
-    )
+    pollingIntervalMinutes.value =
+      normalizePollingIntervalMinutes(station.value?.polling_interval) ?? 0.5
 
-    stationLast.value = lastResult.status === 'fulfilled'
-      ? lastResult.value
-      : null
+    stationLast.value =
+      lastResult.status === 'fulfilled' ? lastResult.value : null
 
-    stationHistory.value = historyResult.status === 'fulfilled'
-      ? safeArray(historyResult.value)
-      : []
+    stationHistory.value =
+      historyResult.status === 'fulfilled' ? safeArray(historyResult.value) : []
 
-    stationSummary.value = summaryResult.status === 'fulfilled'
-      ? summaryResult.value
-      : null
+    stationSummary.value =
+      summaryResult.status === 'fulfilled' ? summaryResult.value : null
 
     if (
       lastResult.status === 'rejected' &&
@@ -389,11 +377,11 @@ async function savePollingInterval() {
   pollingError.value = ''
   pollingSaved.value = ''
 
-  const seconds = minutesToPollingIntervalSeconds(
+  const minutes = normalizePollingIntervalMinutes(
     pollingIntervalMinutes.value,
   )
 
-  if (seconds === null) {
+  if (minutes === null) {
     pollingError.value = 'Укажите положительный интервал опроса в минутах.'
     return
   }
@@ -402,17 +390,16 @@ async function savePollingInterval() {
 
   try {
     const updated = await updateStation(fieldId.value, {
-      polling_interval_seconds: seconds,
+      polling_interval: minutes,
     })
 
     station.value = normalizeStationResponse(updated)
 
-    pollingIntervalMinutes.value = pollingIntervalSecondsToMinutes(
-      station.value.polling_interval_seconds,
-    )
+    pollingIntervalMinutes.value =
+      normalizePollingIntervalMinutes(station.value?.polling_interval) ?? minutes
 
-    pollingSaved.value = `Новый интервал: ${formatPollingIntervalSeconds(
-      station.value.polling_interval_seconds,
+    pollingSaved.value = `Новый интервал: ${formatPollingInterval(
+      pollingIntervalMinutes.value,
     )}.`
   } catch (err) {
     pollingError.value = getErrorMessage(err)
